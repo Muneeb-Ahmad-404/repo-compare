@@ -1,65 +1,97 @@
-import Image from "next/image";
+"use client"
+
+import { getUser } from '../lib/github'
+import { GitHubUser } from '@/types/github';
+import { useState } from 'react'
 
 export default function Home() {
+  const [user1, setUser1] = useState('');
+  const [user2, setUser2] = useState('');
+  const [profile1, setProfile1] = useState<GitHubUser>(null);
+  const [profile2, setProfile2] = useState<GitHubUser>(null);
+  const [error, setError] = useState('');
+
+  async function handleCompare(){
+    if (user1 == "" || user2 == ""){
+      setError("Enter both user names")
+      return;
+    }
+    try{
+      setProfile1(await getUser(user1));
+    }
+    catch(err){
+      setError(`Error - (left field): ${err.message}`);
+      return;
+    }
+
+    try{
+      setProfile2(await getUser(user2));
+    }
+    catch(err){
+      setError(`Error - (right field): ${err.message}`);
+      return;
+    }
+    setError("");
+  }
+  
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <> 
+      <h1 className='text-center text-3xl mt-10'>
+        Compare Github Profiles
+      </h1>
+
+      <div className='flex flex-col gap-4 items-center mt-10'>
+        <div className="flex gap-10">
+          <input
+            value={user1}
+            onChange={(e) => setUser1(e.target.value)}
+            placeholder="User 1"
+            className='border-1 rounded-xl p-2'
+          />
+
+          <input
+            value={user2}
+            onChange={(e) => setUser2(e.target.value)}
+            placeholder="User 2"
+            className='border-1 rounded-xl p-2'
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        
+        <p className='text-red-800 text-lg'>{error}</p>
+
+        <button className='bg-green-900 text-white p-3 rounded-xl' onClick={handleCompare}>
+          Compare
+        </button>
+      </div>  
+
+       { profile1 && profile2 &&
+        <div className="flex gap-10 justify-center mt-10">
+          <div className="border rounded-xl p-5 w-72 shadow-md flex flex-col items-center gap-3">
+            <img src={profile1.avatar_url} className="h-24 w-24 rounded-full" />
+            <h2 className="text-lg font-semibold">{profile1.login}</h2>
+
+            <div className="text-sm text-gray-700 flex flex-col gap-1">
+              <p>Followers: {profile1.followers}</p>
+              <p>Following: {profile1.following}</p>
+              <p>Repos: {profile1.public_repos}</p>
+              <p>Updated: {profile1.updated_at}</p>
+            </div>
+          </div>
+
+          <div className="border rounded-xl p-5 w-72 shadow-md flex flex-col items-center gap-3">
+            <img src={profile2.avatar_url} className="h-24 w-24 rounded-full" />
+            <h2 className="text-lg font-semibold">{profile2.login}</h2>
+
+            <div className="text-sm text-gray-700 flex flex-col gap-1">
+              <p>Followers: {profile2.followers}</p>
+              <p>Following: {profile2.following}</p>
+              <p>Repos: {profile2.public_repos}</p>
+              <p>Updated: {profile2.updated_at}</p>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+      }
+    </>
   );
 }
+
