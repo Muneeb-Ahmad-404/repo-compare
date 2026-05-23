@@ -7,7 +7,7 @@ export async function getUser(userName: string){
         throw new Error("User not found");
     }
 
-    const data = await response.json()
+    const data = await response.json();
 
     const user: GitHubUser = {
         login: data.login,
@@ -21,6 +21,21 @@ export async function getUser(userName: string){
     return user;
 }
 
-export async function getRepos(userName: string){
+export async function getRepos(userName: string, per_page:number = 10, page: number = 1){
+    const response = await fetch(`https://api.github.com/users/${userName}/repos?per_page=${per_page}&&${page}`)
 
+    if(!response.ok){
+        throw new Error("Repos not found");
+    }
+
+    const data = await response.json()
+
+    const repos: GitHubRepo = data.map((repo: any)=> ({
+        name: repo.name,
+        stargazers_count: repo.stargazers_count,
+        language: repo.language,
+        updated_at: repo.updated_at,
+    }))
+
+    return repos;
 }
