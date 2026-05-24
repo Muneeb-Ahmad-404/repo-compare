@@ -13,3 +13,11 @@ export interface GitHubRepo {
   language: string | null;
   updated_at: string;
 }
+
+export interface GitHubStats {
+  total_stars: number;
+  top_repo: string;
+  top_repo_stars: number;
+  top_language: string;
+  activity_score: number;
+}

@@ -39,3 +39,22 @@ export async function getRepos(userName: string, page: number, per_page:number =
 
     return repos;
 }
+
+export async function getAllRepos(userName: string){
+    const response = await fetch(`https://api.github.com/users/${userName}/repos?per_page=${100}&page=${1}`)
+
+    if(!response.ok){
+        throw new Error("Repos not found");
+    }
+
+    const data = await response.json()
+
+    const repos: GitHubRepo[] = data.map((repo: any)=> ({
+        name: repo.name,
+        stargazers_count: repo.stargazers_count,
+        language: repo.language,
+        updated_at: repo.updated_at,
+    }))    
+
+    return repos;
+}
