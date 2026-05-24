@@ -1,7 +1,8 @@
 "use client"
 
+import { getStats } from '@/lib/analytics';
 import { getUser, getRepos } from '../lib/github'
-import { GitHubRepo, GitHubUser } from '@/types/github';
+import { GitHubRepo, GitHubStats, GitHubUser } from '@/types/github';
 import { useState } from 'react'
 
 export default function Home() {
@@ -17,6 +18,9 @@ export default function Home() {
   const [page1 , setPage1] = useState(0);
   const [page2, setPage2] = useState(0);
 
+  const [stats1, setStats1] = useState<GitHubStats | null> (null);
+  const [stats2, setStats2] = useState<GitHubStats | null> (null);
+
 
   async function handleCompare(){
     setPage1(0)
@@ -30,21 +34,42 @@ export default function Home() {
       setError("Enter both user names")
       return;
     }
-    try{
-      setProfile1(await getUser(user1));
+    
+    let fetchedProfile1: GitHubUser;
+    let fetchedProfile2: GitHubUser;
+
+    try {
+      fetchedProfile1 = await getUser(user1);
+      setProfile1(fetchedProfile1);
     }
     catch(err){
       setError(`Error - (left field): ${err.message}`);
       return;
     }
 
-    try{
-      setProfile2(await getUser(user2));
+    try {
+      fetchedProfile2 = await getUser(user2);
+      setProfile2(fetchedProfile2);
     }
     catch(err){
       setError(`Error - (right field): ${err.message}`);
       return;
     }
+    
+    setStats1(
+      await getStats(
+        fetchedProfile1.login,
+        fetchedProfile1.followers
+      )
+    );
+
+    setStats2(
+      await getStats(
+        fetchedProfile2.login,
+        fetchedProfile2.followers
+      )
+    );
+    
     setError("");
   }
 
@@ -112,6 +137,13 @@ export default function Home() {
               <p>Following: {profile1.following}</p>
               <p>Repos: {profile1.public_repos}</p>
               <p>Updated: {profile1.updated_at}</p>
+              {stats1 && (<div>
+                <p>Total Stars: {stats1.total_stars}</p>
+                <p>Top Repo: {stats1.top_repo}</p>
+                <p>Top Repo Stars: {stats1.top_repo_stars}</p>
+                <p>Top Language: {stats1.top_language}</p>
+                <p>Activity Score: {stats1.activity_score}</p>
+              </div>)}
             </div>
             <button className='rounded-xl p-2 bg-green-800 text-white' onClick={() => handleRepos(profile1.login, 1)}>Fetch Repos</button>
           </div>
@@ -125,6 +157,13 @@ export default function Home() {
               <p>Following: {profile2.following}</p>
               <p>Repos: {profile2.public_repos}</p>
               <p>Updated: {profile2.updated_at}</p>
+              {stats2 && (<div>
+                <p>Total Stars: {stats2.total_stars}</p>
+                <p>Top Repo: {stats2.top_repo}</p>
+                <p>Top Repo Stars: {stats2.top_repo_stars}</p>
+                <p>Top Language: {stats2.top_language}</p>
+                <p>Activity Score: {stats2.activity_score}</p>
+              </div>)}
             </div>
             <button className='rounded-xl p-2 bg-green-800 text-white' onClick={() => handleRepos(profile2.login)}>Fetch Repos</button>
           </div>
