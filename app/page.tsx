@@ -1,7 +1,7 @@
 "use client"
 
-import { getUser } from '../lib/github'
-import { GitHubUser } from '@/types/github';
+import { getUser, getRepos } from '../lib/github'
+import { GitHubRepo, GitHubUser } from '@/types/github';
 import { useState } from 'react'
 
 export default function Home() {
@@ -10,8 +10,22 @@ export default function Home() {
   const [profile1, setProfile1] = useState<GitHubUser>(null);
   const [profile2, setProfile2] = useState<GitHubUser>(null);
   const [error, setError] = useState('');
+  
+  const [repos1, setRepos1] = useState<GitHubRepo[] | null>(null);
+  const [repos2, setRepos2] = useState<GitHubRepo[] | null>(null);
+
+  const [page1 , setPage1] = useState(0);
+  const [page2, setPage2] = useState(0);
+
 
   async function handleCompare(){
+    setPage1(0)
+    setPage2(0)
+    setRepos1(null)
+    setRepos2(null)
+    setProfile1(null)
+    setProfile2(null)
+
     if (user1 == "" || user2 == ""){
       setError("Enter both user names")
       return;
@@ -32,6 +46,29 @@ export default function Home() {
       return;
     }
     setError("");
+  }
+
+  async function handleRepos(userName, left = 0){
+    if(left){
+      try{
+        const nextPage = page1 + 1;
+        setPage1(nextPage);
+        setRepos1(await getRepos(userName, nextPage));
+        return;
+      }
+      catch(err){
+        alert(err.message)
+      }
+    }
+    try{
+      const nextPage = page1 + 1;
+      setPage2(nextPage);
+      setRepos2(await getRepos(userName, nextPage));      
+      return;
+    }
+    catch(err){
+      alert(err.message)
+    }
   }
   
   return (
@@ -76,6 +113,7 @@ export default function Home() {
               <p>Repos: {profile1.public_repos}</p>
               <p>Updated: {profile1.updated_at}</p>
             </div>
+            <button className='rounded-xl p-2 bg-green-800 text-white' onClick={() => handleRepos(profile1.login, 1)}>Fetch Repos</button>
           </div>
 
           <div className="border rounded-xl p-5 w-72 shadow-md flex flex-col items-center gap-3">
@@ -88,9 +126,60 @@ export default function Home() {
               <p>Repos: {profile2.public_repos}</p>
               <p>Updated: {profile2.updated_at}</p>
             </div>
+            <button className='rounded-xl p-2 bg-green-800 text-white' onClick={() => handleRepos(profile2.login)}>Fetch Repos</button>
           </div>
         </div>
       }
+      <div className="flex gap-10 justify-center mt-10 ">
+
+        {repos1 && 
+        <div className="w-[400px] border rounded-xl p-5 shadow-md flex flex-col items-center">
+          <h2 className="text-xl font-semibold mb-4">Repositories</h2>
+
+          <div className="flex flex-col gap-4 max-h-[500px] overflow-y-auto">
+            {repos1  &&
+              repos1.map((repo) => (
+                <div
+                  key={repo.name}
+                  className="border rounded-lg p-3 bg-gray-50"
+                >
+                  <p><span className="font-semibold">Name:</span> {repo.name}</p>
+                  <p><span className="font-semibold">Stars:</span> {repo.stargazers_count}</p>
+                  <p><span className="font-semibold">Language:</span> {repo.language || "N/A"}</p>
+                  <p className="text-sm text-gray-600">
+                    Updated: {repo.updated_at}
+                  </p>
+                </div>
+              ))}
+          </div>
+
+          <button className='rounded-xl p-2 px-8 bg-green-800 text-white mt-8' onClick={() => handleRepos(profile1.login, 1)}>Next</button>
+        </div>
+        }
+        {repos2 &&
+        <div className="w-[400px] border rounded-xl p-5 shadow-md flex flex-col items-center">
+          <h2 className="text-xl font-semibold mb-4">Repositories</h2>
+
+          <div className="flex flex-col gap-4 max-h-[500px] overflow-y-auto">
+            {repos2 &&
+              repos2.map((repo) => (
+                <div
+                  key={repo.name}
+                  className="border rounded-lg p-3 bg-gray-50"
+                >
+                  <p><span className="font-semibold">Name:</span> {repo.name}</p>
+                  <p><span className="font-semibold">Stars:</span> {repo.stargazers_count}</p>
+                  <p><span className="font-semibold">Language:</span> {repo.language || "N/A"}</p>
+                  <p className="text-sm text-gray-600">
+                    Updated: {repo.updated_at}
+                  </p>
+                </div>
+              ))}
+          </div>
+
+          <button className='rounded-xl p-2 px-8 bg-green-800 text-white mt-8' onClick={() => handleRepos(profile2.login)}>Next</button>
+        </div>}
+      </div>
     </>
   );
 }
